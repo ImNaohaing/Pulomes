@@ -1,0 +1,28 @@
+<component name="libraryTable">
+  <library name="Generated files" type="javaScript">
+    <properties>
+      <sourceFilesUrls>
+        <item url="file://$PROJECT_DIR$/js/lightTest.js" />
+        <item url="file://$PROJECT_DIR$/js/PBD_2.js" />
+        <item url="file://$PROJECT_DIR$/js/jsPlayground.js" />
+        <item url="file://$PROJECT_DIR$/js/PBDApp2.js" />
+        <item url="file://$PROJECT_DIR$/js/ClothApp.js" />
+        <item url="file://$PROJECT_DIR$/js/PBDApp_2.js" />
+        <item url="file://$PROJECT_DIR$/js/PBDApp.js" />
+      </sourceFilesUrls>
+    </properties>
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/js/Cloth.js" />
+      <root url="file://$PROJECT_DIR$/js/Cloth.js" />
+      <root url="file://$PROJECT_DIR$/js/PBDApp2.js" />
+      <root url="file://$PROJECT_DIR$/js/lightTest.js" />
+      <root url="file://$PROJECT_DIR$/js/PBD_2.js" />
+      <root url="file://$PROJECT_DIR$/js/jsPlayground.js" />
+      <root url="file://$PROJECT_DIR$/js/PBDApp2.js" />
+      <root url="file://$PROJECT_DIR$/js/ClothApp.js" />
+      <root url="file://$PROJECT_DIR$/js/PBDApp_2.js" />
+      <root url="file://$PROJECT_DIR$/js/PBDApp.js" />
+    </CLASSES>
+    <SOURCES />
+  </library>
+</component>
