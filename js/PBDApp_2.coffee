@@ -61,6 +61,36 @@ pins = [
     ,position: [-20,50,100]
   }
 ]
+
+class Ball
+  constructor: (position, radius, mass) ->
+    @position = new THREE.Vector3().copy(position)
+    @previous = new THREE.Vector3().copy(position)
+    @radius   = radius
+    @mass     = mass
+    @invmass  = if mass is 0 then 0 else 1/mass
+    @a        = new THREE.Vector3(0, 0, 0)
+    @tmp      = new THREE.Vector3()
+    @tmp2     = new THREE.Vector3()
+  addForce: (force) ->
+    @tmp.copy(force).multiplyScalar(@invmass)
+    @a.add(@tmp)
+
+  integrate: (deltaTime) ->
+    @tmp2.subVectors(@position,@previous)
+    diff = @tmp2.add(@a.multiplyScalar(deltaTime*deltaTime)).add(@position)
+    @tmp2 = @previous
+    @previous = @position
+    @position = diff
+    @a.set(0, 0, 0)
+
+  simulate: (deltaTime) ->
+# Gravity Force
+    gForce = new THREE.Vector3().copy(gravity)
+    gForce.multiplyScalar(@mass)
+    @addForce(gForce)
+    @integrate(deltaTime)
+
 class PBDVertice
   constructor: (x, y, z, mass) -> #position: Three.Vector3, mass: Float
     @previous = new THREE.Vector3(x, y, z)
@@ -166,99 +196,108 @@ class PBDCloth
 
 
 
-    for constrain in @constrains
-      @applyConstrains(constrain[0], constrain[1], constrain[2], 0)
+    for j in [0..2]
+      # Ball Contact
+      if @collisionProxy?
+        balls = @collisionProxy
+        for ball in balls
+
+          for particle in @particles
+            @applyBallContact(particle, ball)
+
+          for constrain in @constrains
+            @applyConstrains(constrain[0], constrain[1], constrain[2], j)
 
 
 
 
 
-    #Pin Constrains
-    for pin in pins
-      if not pin.index? then continue
-      [x, y] = pin.index
-      particle = @particles[@index(x,y)]
-      if pin.position?
-        particle.position.set(pin.position[0], pin.position[1], pin.position[2])
-      else
-        particle.position.copy(particle.original)
-        particle.previous.copy(particle.original)
+        #Pin Constrains
+        for pin in pins
+          if not pin.index? then continue
+          [x, y] = pin.index
+          particle = @particles[@index(x,y)]
+          if pin.position?
+            particle.position.set(pin.position[0], pin.position[1], pin.position[2])
+          else
+            particle.position.copy(particle.original)
+            particle.previous.copy(particle.original)
 
-    #Floor
-    for particle in @particles
-      if particle.position.y < -10 then particle.position.y = -10
+        #Floor
+        for particle in @particles
+          if particle.position.y < -10 then particle.position.y = -10
 
-    #applyBendConstrains
-    bendCorrection = new THREE.Vector3()
-    e = new THREE.Vector3()
-    n1 = new THREE.Vector3()
-    n2 = new THREE.Vector3()
-    d0 = new THREE.Vector3()
-    d1 = new THREE.Vector3()
-    d2 = new THREE.Vector3()
-    d3 = new THREE.Vector3()
+        #applyBendConstrains
+        bendCorrection = new THREE.Vector3()
+        e = new THREE.Vector3()
+        n1 = new THREE.Vector3()
+        n2 = new THREE.Vector3()
+        d0 = new THREE.Vector3()
+        d1 = new THREE.Vector3()
+        d2 = new THREE.Vector3()
+        d3 = new THREE.Vector3()
 
-    for bend in @bendConstrains
-      [faceA,faceB,par0,par1,par3,par2] = bend
-      [p0,p1,p2,p3] = [par0.position, par1.position, par2.position, par3.position]
-
-
-      e.subVectors(p3,p2)
-      elen = e.length()
-      if elen < 1e-6 then continue
-      invElen = 1 / elen
-      tmp3 = new THREE.Vector3()
-      tmp4 = new THREE.Vector3()
-      tmp3.subVectors(p3,p0)
-      n1.subVectors(p2,p0).cross(tmp3)
-      n1.divideScalar(n1.lengthSq())
-      tmp3.subVectors(p2,p1)
-      n2.subVectors(p3,p1).cross(tmp3)
-      n2.divideScalar(n2.lengthSq())
-
-      # ------------------------------------------
-      #      tmp3.copy(n1).normalize()
-      #      tmp4.copy(n2).normalize()
-      #      dotProduct = tmp3.dot(tmp4)
-      #
-      #      dotProduct = -1 if dotProduct < -1
-      #      dotProduct = 1 if dotProduct > 1
-      #      restAngle # Math.acos(dotProduct)
-      # ------------------------------------------
+        for bend in @bendConstrains
+          [faceA,faceB,par0,par1,par3,par2] = bend
+          [p0,p1,p2,p3] = [par0.position, par1.position, par2.position, par3.position]
 
 
-      d0.copy(n1).multiplyScalar(elen)
-      d1.copy(n2).multiplyScalar(elen)
+          e.subVectors(p3,p2)
+          elen = e.length()
+          if elen < 1e-6 then continue
+          invElen = 1 / elen
+          tmp3 = new THREE.Vector3()
+          tmp4 = new THREE.Vector3()
+          tmp3.subVectors(p3,p0)
+          n1.subVectors(p2,p0).cross(tmp3)
+          n1.divideScalar(n1.lengthSq())
+          tmp3.subVectors(p2,p1)
+          n2.subVectors(p3,p1).cross(tmp3)
+          n2.divideScalar(n2.lengthSq())
 
-      tmp3.copy(n1)
-      d2.copy(tmp3.multiplyScalar(d2.subVectors(p0,p3).dot(e) * invElen))
-      tmp3.copy(n2)
-      d2.add(tmp3.multiplyScalar(tmp4.subVectors(p1,p3).dot(e) * invElen))
+          # ------------------------------------------
+          #      tmp3.copy(n1).normalize()
+          #      tmp4.copy(n2).normalize()
+          #      dotProduct = tmp3.dot(tmp4)
+          #
+          #      dotProduct = -1 if dotProduct < -1
+          #      dotProduct = 1 if dotProduct > 1
+          #      restAngle # Math.acos(dotProduct)
+          # ------------------------------------------
 
-      tmp3.copy(n1)
-      d3.copy(tmp3.multiplyScalar(d3.subVectors(p2,p0).dot(e) * invElen))
-      tmp3.copy(n2)
-      d3.add(tmp3.multiplyScalar(tmp4.subVectors(p2,p1).dot(e) * invElen))
 
-      n1.normalize()
-      n2.normalize()
+          d0.copy(n1).multiplyScalar(elen)
+          d1.copy(n2).multiplyScalar(elen)
 
-      doot = n1.dot(n2)
+          tmp3.copy(n1)
+          d2.copy(tmp3.multiplyScalar(d2.subVectors(p0,p3).dot(e) * invElen))
+          tmp3.copy(n2)
+          d2.add(tmp3.multiplyScalar(tmp4.subVectors(p1,p3).dot(e) * invElen))
 
-      doot = -1 if doot < -1
-      doot = 1 if doot > 1
-      phi = Math.acos(doot)
-      lambda = par0.invmass * d0.lengthSq() + par1.invmass * d1.lengthSq() + par2.invmass * d2.lengthSq() + par3.invmass * d3.lengthSq()
+          tmp3.copy(n1)
+          d3.copy(tmp3.multiplyScalar(d3.subVectors(p2,p0).dot(e) * invElen))
+          tmp3.copy(n2)
+          d3.add(tmp3.multiplyScalar(tmp4.subVectors(p2,p1).dot(e) * invElen))
 
-      if lambda is 0 then continue
+          n1.normalize()
+          n2.normalize()
 
-      lambda = (phi - global.bendRest) / lambda * global.bendStiff #stiffness
+          doot = n1.dot(n2)
 
-      lambda = -lambda if n1.cross(n2).dot(e) > 0
-      p0.add(d0.multiplyScalar(-lambda*par0.invmass))
-      p1.add(d1.multiplyScalar(-lambda*par1.invmass))
-      p2.add(d2.multiplyScalar(-lambda*par2.invmass))
-      p3.add(d3.multiplyScalar(-lambda*par3.invmass))
+          doot = -1 if doot < -1
+          doot = 1 if doot > 1
+          phi = Math.acos(doot)
+          lambda = par0.invmass * d0.lengthSq() + par1.invmass * d1.lengthSq() + par2.invmass * d2.lengthSq() + par3.invmass * d3.lengthSq()
+
+          if lambda is 0 then continue
+
+          lambda = (phi - global.bendRest) / lambda * global.bendStiff #stiffness
+
+          lambda = -lambda if n1.cross(n2).dot(e) > 0
+          p0.add(d0.multiplyScalar(-lambda*par0.invmass))
+          p1.add(d1.multiplyScalar(-lambda*par1.invmass))
+          p2.add(d2.multiplyScalar(-lambda*par2.invmass))
+          p3.add(d3.multiplyScalar(-lambda*par3.invmass))
 
 
 
@@ -268,6 +307,17 @@ class PBDCloth
 
 
     @estimateNewVelocity(deltaTime)
+
+  applyBallContact: (p, ball) ->
+    @diff.subVectors(p.position, ball.position)
+    currentDist = @diff.length()
+    if currentDist > ball.radius then return
+    correction = @diff.multiplyScalar(1 - ball.radius / currentDist)
+    currectionBall = correction.multiplyScalar(@particleMass / (ball.mass + @particleMass))
+    ball.position.add(currectionBall)
+    currectionParticle = correction.multiplyScalar(ball.mass / @particleMass)
+    p.position.sub(currectionParticle)
+
 
 
   applyConstrains: (p2, p1, distance, iterTimes) ->
@@ -335,6 +385,7 @@ initScene = ->
   renderer = new THREE.WebGLRenderer()
   renderer.setClearColor(0xEEEEEE)
   renderer.setSize(window.innerWidth, window.innerHeight)
+  renderer.shadowMap.enabled = on
   {scene, camera, renderer}
 
 
@@ -346,13 +397,22 @@ document.body.appendChild(renderer.domElement)
 scene.add( new THREE.AmbientLight( 0x666666 ) )
 light = new THREE.DirectionalLight( 0xdfebff, 0.8 )
 light.position.set( 50, 200, 100 )
+light.castShadow = true
+light.shadow.camera.near = 2
+light.shadow.camera.far = 1000
+light.shadow.camera.left = -500
+light.shadow.camera.right = 500
+light.shadow.camera.top= 500
+light.shadow.camera.bottom= -500
+light.shadow.mapSize.width = 1024
+light.shadow.mapSize.height = 1024
 scene.add(light)
 
 
 
 cloth = new PBDCloth(3,40,40)
 clothMaterial = new THREE.MeshLambertMaterial(color: 0x22b5ff, side: THREE.DoubleSide)
-clothFrameMaterial = new THREE.MeshBasicMaterial(color:0xff0000, wireframe: on)
+clothFrameMaterial = new THREE.MeshBasicMaterial(color:0x22b5ff, wireframe: on)
 clothGeometry = new THREE.ParametricGeometry(cloth.planeFunc, cloth.ws, cloth.hs)
 cloth.setFaces(clothGeometry.faces)
 
@@ -364,6 +424,38 @@ scene.add(clothObj)
 #for i in [0..5]
 #  arrows.push(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(5,5,5),10,0x444444))
 #  scene.add(arrows[i])
+applyBall2BallContacts = (b1, b2) ->
+  diff = new THREE.Vector3()
+  diff.subVectors(b1.position,b2.position)
+  distance = diff.length()
+  d = b1.radius + b2.radius
+  if distance > d then return
+  diff.multiplyScalar(1- d / distance)
+  correctHalf = diff.multiplyScalar(0.5)
+  b1.position.sub(correctHalf)
+  b2.position.add(correctHalf)
+
+
+balls = []
+ballObjs = []
+ballRadius = 10
+ballMass = 15
+ballMaterial = new THREE.MeshLambertMaterial(color: 0x8B5A00)
+NUM = 5
+for u in [0..NUM-1]
+  initBallPos = new THREE.Vector3(-25+u*15,300,55+u*15)
+  balls.push( new Ball(initBallPos, ballRadius, ballMass) )
+  ballGeometry = new THREE.SphereGeometry(ballRadius,32,32)
+  ballObj = new THREE.Mesh(ballGeometry, ballMaterial)
+  ballObj.position.copy(initBallPos)
+  ballObj.castShadow = on
+  ballObj.receiveShadow = on
+  ballObjs.push(ballObj)
+  scene.add(ballObj)
+
+
+clothObj.children[0].receiveShadow = on
+cloth.collisionProxy = balls
 
 
 gui = new dat.GUI()
@@ -393,6 +485,15 @@ render = ->
   clothGeometry.normalsNeedUpdate = yes
   clothGeometry.verticesNeedUpdate = yes
   clothFrameMaterial.wireframe = global.wireframe
+
+  for ball,i in balls
+    ball.simulate(TIMESTEP)
+    ballObjs[i].position.copy(ball.position)
+    for j in [i..balls.length-1]
+      if j is i then continue
+      applyBall2BallContacts(balls[i], balls[j])
+      ballObjs[i].position.copy(balls[i].position)
+      ballObjs[j].position.copy(balls[j].position)
 
 
   #  for i in [0..5]
