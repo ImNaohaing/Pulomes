@@ -124,8 +124,8 @@
       this.velocity = new THREE.Vector3(0, 0, 0);
       this.tmp = new THREE.Vector3();
       this.tmp2 = new THREE.Vector3();
-      this.mass = mass;
-      this.invmass = mass === 0 ? 0 : 1 / mass;
+      this.mass = mass != null ? mass : 0;
+      this.invmass = this.mass === 0 ? 0 : 1 / this.mass;
       this.a = new THREE.Vector3(0, 0, 0);
     }
 

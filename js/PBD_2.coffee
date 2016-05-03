@@ -69,8 +69,8 @@ class PBDVertice
     @velocity = new THREE.Vector3(0, 0, 0)
     @tmp      = new THREE.Vector3()
     @tmp2     = new THREE.Vector3()
-    @mass     = mass
-    @invmass  = if mass is 0 then 0 else 1/mass #should not be changed after initialization
+    @mass     = if mass? then mass else 0
+    @invmass  = if @mass is 0 then 0 else 1 / @mass #should not be changed after initialization
     @a        = new THREE.Vector3(0, 0, 0)
 
   addForce: (force) ->
