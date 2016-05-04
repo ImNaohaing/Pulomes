@@ -1,6 +1,45 @@
 global = {
   compressSpeed: 1
   eps: 1e-6
+  stiffness: 0.7
+  shapeStiff: 0.3
+  shapeStretch: false
+
+  generateGeometryFromBufferGeometry: (bufferGeometry) ->
+    float32Array = bufferGeometry.attributes.position.array
+    geometry = new THREE.Geometry()
+    vertices = geometry.vertices
+    faces = geometry.faces
+
+    compareVertex = (a,b) ->
+      return false if Math.abs(a.x - b.x) > global.eps
+      return false if Math.abs(a.y - b.y) > global.eps
+      return false if Math.abs(a.z - b.z) > global.eps
+      true
+
+
+    for i in [0...float32Array.length] by 9
+      v1 = new THREE.Vector3(float32Array[i]  , float32Array[i+1], float32Array[i+2])
+      v2 = new THREE.Vector3(float32Array[i+3], float32Array[i+4], float32Array[i+5])
+      v3 = new THREE.Vector3(float32Array[i+6], float32Array[i+7], float32Array[i+8])
+      face = {}
+      for v, j in vertices
+        face.a = j if compareVertex(v1, v) is true
+        face.b = j if compareVertex(v2, v) is true
+        face.c = j if compareVertex(v3, v) is true
+
+      if face.a is undefined
+        vertices.push(v1)
+        face.a = vertices.length - 1
+      if face.b is undefined
+        vertices.push(v2)
+        face.b = vertices.length - 1
+      if face.c is undefined
+        vertices.push(v3)
+        face.c = vertices.length - 1
+      faces.push(new THREE.Face3(face.a, face.b, face.c))
+
+    geometry
 
   getE: (matrix3, r, c) ->
     matrix3.elements[r+c*3]
@@ -309,6 +348,17 @@ global = {
 
     corr
 
+
+  applyConstrains: (p2, p1, distance, iterTimes) ->
+    iterTimes ?= 0
+    diff = new THREE.Vector3().subVectors(p2, p1)
+    currentDist = diff.length()
+    if currentDist is 0 then return
+    correction = diff.multiplyScalar(1 - distance / currentDist)
+    currectionHalf = correction.multiplyScalar(0.5).multiplyScalar(1-Math.pow(1-@stiffness,1/(iterTimes+1)))
+    p1.add(currectionHalf)
+    p2.sub(currectionHalf)
+
 }
 
 class PBDParticle
@@ -422,100 +472,168 @@ axes = new THREE.AxisHelper(20)
 scene.add(axes)
 
 #-------- Test Start -----------
-boxGeometry = new THREE.BoxGeometry(10, 10, 10, 10, 10, 10)
-boxBasicMaterial = new THREE.MeshStandardMaterial(color: 0x22b5ff)
-#boxFrameMaterial = new THREE.MeshBasicMaterial(color: 0xff0000, wireframe: on)
-boxObj = new THREE.SceneUtils.createMultiMaterialObject(boxGeometry, [boxBasicMaterial])#, boxFrameMaterial])
-boxObj.position.set(0, 0, 0)
-scene.add(boxObj)
-boxObj.visible = on
 
-#sphereGeometry = new THREE.SphereGeometry( 5, 32, 32, 0, 2 * Math.PI )
-#sphereBasicMaterial = new THREE.MeshNormalMaterial( color: 0x22b5ff )
-##sphereFrameMaterial = new THREE.MeshBasicMaterial(color: 0xff0000, wireframe: on)
-#sphereObj = new THREE.SceneUtils.createMultiMaterialObject(sphereGeometry, [sphereBasicMaterial])#, sphereFrameMaterial])
-#sphereObj.position.set(0, 0, 0)
-#scene.add( sphereObj )
-#sphereObj.visible = on
+mesh = undefined
 
+loader  = new THREE.STLLoader()
+stlMaterial = new THREE.MeshNormalMaterial(color: 0xAAAAAA, specular: 0x111111, shininess: 200)
 
-geometry = boxGeometry
-x0 = []
-for v in geometry.vertices
-  x0.push(new THREE.Vector3().copy(v))
-restCm = new THREE.Vector3()
-invRestMat = new THREE.Matrix3()
-global.initShapeMatching(geometry.vertices,restCm,invRestMat)
-console.log("x:#{restCm.x} , y:#{restCm.y} , z:#{restCm.z}")
+loadFunc = (bufferGeometry) ->
+  geometry = global.generateGeometryFromBufferGeometry(bufferGeometry)
 
+  mesh = new THREE.Mesh(geometry, stlMaterial)
+  mesh.position.set(0,0,0)
+  mesh.rotation.set(0,0,0)
+  mesh.scale.set(0.3,0.3,0.3)
 
-console.log(global.computeVolumeTHREE(geometry.vertices, geometry.faces))
-geometryTopo = global.generateTopologyModelTHREE(geometry.vertices, geometry.faces)
-wnv     = global.computeWeighedNorms(geometryTopo, geometry.vertices, geometry.faces)
-restVolume  = global.computeVolumeByWeighedNorms(wnv, geometry.vertices)
-console.log(restVolume)
-
-planeGeo = new THREE.PlaneGeometry(50,50)
-planeMat = new THREE.MeshBasicMaterial(color: 0x22b5ff, side: THREE.DoubleSide)
-planeMat.transparent = on
-planeMat.opacity = 0.1
-planeObj = new THREE.Mesh(planeGeo, planeMat)
-planeObj.rotation.x = Math.PI / 2
-planeObj.position.set(0,13,0)
-
-scene.add(planeObj)
-
-
-trans = new THREE.Vector3(0,0,0)
-gui = new dat.GUI()
-#gui.add(global, "wireframe").onChange()
-h = gui.addFolder( "Vertex Position" )
-h.add(planeObj.position,"y",-3,25)
-
-updatePlaneConstrains = () ->
+  mesh.updateMatrixWorld()
   for v in geometry.vertices
-    correctY = THREE.Math.clamp(v.y, -5, planeObj.position.y)
-    v.y = correctY
+    v.applyMatrix4(mesh.matrixWorld)
 
-
-
-
-#-------- Test End -----------
-
-clock = new THREE.Clock()
-render = ->
-  delta = clock.getDelta()
-  orbitControls.update(delta)
-
-
-  #planeObj.position.y = -Math.sin( clock.getElapsedTime()*global.compressSpeed/50 ) * 8 + 5
-  #tf(trans.x, trans.y, trans.z)
-  updatePlaneConstrains()
-  #-------- Test Start -----------
-
-
-  corrects = global.computeVolumeConstrain(restVolume, geometryTopo, geometry.vertices, geometry.faces)
-  for v, i in geometry.vertices
-    v.add(corrects[i])
-
-  wnv = global.computeWeighedNorms(geometryTopo, geometry.vertices, geometry.faces)
-  volume = global.computeVolumeByWeighedNorms(wnv, geometry.vertices)
-  #console.log(volume)
-
-  corrs = global.computeShapeMatching(x0, geometry.vertices, restCm, invRestMat, 0.2, false)
-  for v, i in geometry.vertices
-    v.add(corrs[i])
+  mesh.rotation.set(0,0,0)
+  mesh.scale.set(1, 1, 1)
+  mesh.position.set(0,0,-10)
 
   geometry.computeFaceNormals()
   geometry.computeVertexNormals()
-  geometry.normalsNeedUpdate = yes
-  geometry.verticesNeedUpdate = yes
+
+  scene.add(mesh)
+  bufferGeometry.dispose()
+
+  appStart()
+
+loader.load("../models/马里奥.stl", loadFunc)
+
+
+
+
+
+
+
+
+
+
+
+
+
+appStart = () ->
+
+  #boxGeometry = new THREE.BoxGeometry(10, 10, 10, 10, 10, 10)
+  #boxBasicMaterial = new THREE.MeshStandardMaterial(color: 0x22b5ff)
+  ##boxFrameMaterial = new THREE.MeshBasicMaterial(color: 0xff0000, wireframe: on)
+  #boxObj = new THREE.SceneUtils.createMultiMaterialObject(boxGeometry, [boxBasicMaterial])#, boxFrameMaterial])
+  #boxObj.position.set(0, 0, 0)
+  #scene.add(boxObj)
+  #boxObj.visible = on
+
+  #sphereGeometry = new THREE.SphereGeometry( 5, 32, 32, 0, 2 * Math.PI )
+  #sphereBasicMaterial = new THREE.MeshNormalMaterial( color: 0x22b5ff )
+  ##sphereFrameMaterial = new THREE.MeshBasicMaterial(color: 0xff0000, wireframe: on)
+  #sphereObj = new THREE.SceneUtils.createMultiMaterialObject(sphereGeometry, [sphereBasicMaterial])#, sphereFrameMaterial])
+  #sphereObj.position.set(0, 0, 0)
+  #scene.add( sphereObj )
+  #sphereObj.visible = off
+
+
+  geometry = mesh.geometry #sphereGeometry
+  x0 = []
+  for v in geometry.vertices
+    x0.push(new THREE.Vector3().copy(v))
+  restCm = new THREE.Vector3()
+  invRestMat = new THREE.Matrix3()
+  global.initShapeMatching(geometry.vertices,restCm,invRestMat)
+  console.log("x:#{restCm.x} , y:#{restCm.y} , z:#{restCm.z}")
+
+
+  console.log(global.computeVolumeTHREE(geometry.vertices, geometry.faces))
+  geometryTopo = global.generateTopologyModelTHREE(geometry.vertices, geometry.faces)
+  wnv     = global.computeWeighedNorms(geometryTopo, geometry.vertices, geometry.faces)
+  restVolume  = global.computeVolumeByWeighedNorms(wnv, geometry.vertices)
+  console.log(restVolume)
+
+  planeGeo = new THREE.PlaneGeometry(50,50)
+  planeMat = new THREE.MeshBasicMaterial(color: 0x22b5ff, side: THREE.DoubleSide)
+  planeMat.transparent = on
+  planeMat.opacity = 0.1
+  planeObj = new THREE.Mesh(planeGeo, planeMat)
+  planeObj.rotation.x = Math.PI / 2
+  planeObj.position.set(0,15,0)
+
+  scene.add(planeObj)
+
+
+  trans = new THREE.Vector3(0,0,0)
+  gui = new dat.GUI()
+
+  h = gui.addFolder( "Vertex Position" )
+  h.add(planeObj.position,"y",0,13)
+  h = gui.addFolder( "Coeffience" )
+  h.add(global,"stiffness",0,1)
+  h.add(global,"shapeStiff",0,1)
+  h.add(global, "shapeStretch").onChange()
+
+  updatePlaneConstrains = () ->
+    for v in geometry.vertices
+      correctY = THREE.Math.clamp(v.y, -3, planeObj.position.y)
+      v.y = correctY
+
+  distanceConstrains = []
+  tmpVec = new THREE.Vector3()
+  for f in geometry.faces
+    fa = geometry.vertices[f.a]
+    fb = geometry.vertices[f.b]
+    fc = geometry.vertices[f.c]
+    distanceConstrains.push([fa, fb, tmpVec.subVectors(fa,fb).length()])
+    distanceConstrains.push([fa, fc, tmpVec.subVectors(fa,fc).length()])
+    distanceConstrains.push([fb, fc, tmpVec.subVectors(fb,fc).length()])
+
+
+  updateDistanceConstrains = () ->
+    for dc in distanceConstrains
+      global.applyConstrains(dc[1],dc[0],dc[2])
+
+
 
 
   #-------- Test End -----------
 
-  stats.update()
-  requestAnimationFrame(render)
-  renderer.render(scene, camera)
+  clock = new THREE.Clock()
+  render = ->
+    delta = clock.getDelta()
+    orbitControls.update(delta)
 
-render()
+
+    #planeObj.position.y = -Math.sin( clock.getElapsedTime()*global.compressSpeed/50 ) * 8 + 5
+    #tf(trans.x, trans.y, trans.z)
+    updatePlaneConstrains()
+    #-------- Test Start -----------
+
+
+
+
+    wnv = global.computeWeighedNorms(geometryTopo, geometry.vertices, geometry.faces)
+    volume = global.computeVolumeByWeighedNorms(wnv, geometry.vertices)
+    corrects = global.computeVolumeConstrain(restVolume, geometryTopo, geometry.vertices, geometry.faces)
+    for v, i in geometry.vertices
+      v.add(corrects[i])
+    #console.log(volume)
+    for i in [0...2]
+      corrs = global.computeShapeMatching(x0, geometry.vertices, restCm, invRestMat, global.shapeStiff, global.shapeStretch)
+      for v, i in geometry.vertices
+        v.add(corrs[i])
+
+    updateDistanceConstrains()
+
+    geometry.computeFaceNormals()
+    geometry.computeVertexNormals()
+    geometry.normalsNeedUpdate = yes
+    geometry.verticesNeedUpdate = yes
+
+
+    #-------- Test End -----------
+
+    stats.update()
+    requestAnimationFrame(render)
+    renderer.render(scene, camera)
+
+  render()
