@@ -97,14 +97,13 @@ class Solver
 
 
 
-
-
 class EdgeStrainConstrain
   constructor: (positions, pid1, pid2, weight, rangeMin=1, rangeMax=1) ->
     @pid1     = pid1
     @pid2     = pid2
     @rMin     = rangeMin
     @rMax     = rangeMax
+
 
 
     len = kmath.length( kmath.subVectors(positions[pid2],positions[pid1]) )

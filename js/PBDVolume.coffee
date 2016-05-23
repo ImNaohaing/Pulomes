@@ -1,8 +1,8 @@
 global = {
   compressSpeed: 1
   eps: 1e-6
-  stiffness: 0.7
-  shapeStiff: 0.3
+  stiffness: 0.25
+  shapeStiff: 0.17
   shapeStretch: false
 
   generateGeometryFromBufferGeometry: (bufferGeometry) ->
@@ -483,7 +483,7 @@ loadFunc = (bufferGeometry) ->
 
   mesh = new THREE.Mesh(geometry, stlMaterial)
   mesh.position.set(0,0,-10)
-  mesh.rotation.set(0,0,0)
+  mesh.rotation.set(0,0,-Math.PI/2.8)
   mesh.scale.set(0.3,0.3,0.3)
 
   mesh.updateMatrixWorld()
@@ -551,15 +551,27 @@ appStart = () ->
   restVolume  = global.computeVolumeByWeighedNorms(wnv, geometry.vertices)
   console.log(restVolume)
 
-  planeGeo = new THREE.SphereGeometry( 5, 32, 32, 0, 2 * Math.PI)
+  planeGeo = new THREE.PlaneGeometry( 36, 36 )
+  planeMatTop = new THREE.MeshBasicMaterial(color: 0x22b5ff, side: THREE.DoubleSide)
   planeMat = new THREE.MeshBasicMaterial(color: 0x22b5ff, side: THREE.DoubleSide)
+  planeMatTop.transparent = on
   planeMat.transparent = on
+  planeMatTop.opacity = 0.1
   planeMat.opacity = 0.1
-  planeObj = new THREE.Mesh(planeGeo, planeMat)
+  planeObj = new THREE.Mesh(planeGeo, planeMatTop)
+  planeSideGeo = new THREE.PlaneGeometry( 50, 20 )
+  planeLeft = new THREE.Mesh(planeSideGeo, planeMat)
+  planeRight = new THREE.Mesh(planeSideGeo, planeMat)
   planeObj.rotation.x = Math.PI / 2
+  planeLeft.rotation.y = Math.PI / 2
+  planeRight.rotation.y = Math.PI / 2
   planeObj.position.set(0,15,10)
-
+  planeLeft.position.set(-15,0,0)
+  planeRight.position.set(+7,0,0)
   scene.add(planeObj)
+  scene.add(planeLeft)
+  scene.add(planeRight)
+
 
 
   trans = new THREE.Vector3(0,0,0)
@@ -575,13 +587,15 @@ appStart = () ->
   updatePlaneConstrains = () ->
     tmpVec = new THREE.Vector3()
     for v in geometry.vertices
-#      correctY = THREE.Math.clamp(v.y, -3, planeObj.position.y)
-#      v.y = correctY
-      tmpVec.subVectors(planeObj.position, v)
-      l = tmpVec.lengthSq()
-      if l < 25
-        tmpVec.normalize().multiplyScalar(5)
-        v.subVectors(planeObj.position, tmpVec)
+      correctY = THREE.Math.clamp(v.y, -3, planeObj.position.y)
+      v.y = correctY
+      correctX = THREE.Math.clamp(v.x, planeLeft.position.x, planeRight.position.x)
+      v.x = correctX
+#      tmpVec.subVectors(planeObj.position, v)
+#      l = tmpVec.lengthSq()
+#      if l < 25
+#        tmpVec.normalize().multiplyScalar(5)
+#        v.subVectors(planeObj.position, tmpVec)
 
 
       v.y = -3 if v.y < -3
@@ -613,11 +627,11 @@ appStart = () ->
     orbitControls.update(delta)
 
 
+    planeLeft.position.x = -Math.sin( clock.getElapsedTime())*10 - 10
     #planeObj.position.y = -Math.sin( clock.getElapsedTime()*global.compressSpeed/50 ) * 8 + 5
     #tf(trans.x, trans.y, trans.z)
     updatePlaneConstrains()
     #-------- Test Start -----------
-
 
 
 
