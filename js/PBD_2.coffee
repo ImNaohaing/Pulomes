@@ -1,3 +1,10 @@
+#//              ______    _____            _________       _____   _____
+#//            /     /_  /    /            \___    /      /    /__/    /
+#//           /        \/    /    ___        /    /      /            /    ___
+#//          /     / \      /    /\__\      /    /___   /    ___     /    /   \
+#//        _/____ /   \___ /    _\___     _/_______ / _/___ / _/___ /    _\___/\_
+
+
 global = {
   lerp: (s, e, t) ->
     if 1 >= t >= 0 then return (e - s) * t + s
@@ -314,7 +321,12 @@ class PBDCloth
         @bendConstrains.push([faceA, faceB, @particles[faceA.a], @particles[faceB.c], @particles[faceB.a], @particles[faceB.b]])
 
 
+onWindowResize = ->
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize( window.innerWidth, window.innerHeight )
 
+window.addEventListener('resize', onWindowResize, false)
 
 
 initStats = ->

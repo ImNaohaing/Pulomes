@@ -1,3 +1,11 @@
+#//              ______    _____            _________       _____   _____
+#//            /     /_  /    /            \___    /      /    /__/    /
+#//           /        \/    /    ___        /    /      /            /    ___
+#//          /     / \      /    /\__\      /    /___   /    ___     /    /   \
+#//        _/____ /   \___ /    _\___     _/_______ / _/___ / _/___ /    _\___/\_
+
+
+
 global = {
   compressSpeed: 1
   eps: 1e-6
@@ -421,6 +429,13 @@ class Hexahedron
 
   addVolumeConstrain: ()->
 
+
+onWindowResize = ->
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize( window.innerWidth, window.innerHeight )
+
+window.addEventListener('resize', onWindowResize, false)
 
 initStats = ->
   stats = new Stats()

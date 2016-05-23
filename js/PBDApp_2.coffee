@@ -1,3 +1,9 @@
+#//              ______    _____            _________       _____   _____
+#//            /     /_  /    /            \___    /      /    /__/    /
+#//           /        \/    /    ___        /    /      /            /    ___
+#//          /     / \      /    /\__\      /    /___   /    ___     /    /   \
+#//        _/____ /   \___ /    _\___     _/_______ / _/___ / _/___ /    _\___/\_
+
 global = {
   lerp: (s, e, t) ->
     if 1 >= t >= 0 then return (e - s) * t + s
@@ -9,7 +15,7 @@ global = {
     a = b
     b = c
   bendStiff: 0.1
-  bendRest:0.33
+  bendRest:0.3
   wireframe: on
 }
 
@@ -196,7 +202,7 @@ class PBDCloth
 
 
 
-    for j in [0..2]
+    for j in [0...2]
       # Ball Contact
       if @collisionProxy?
         balls = @collisionProxy
@@ -364,8 +370,12 @@ class PBDCloth
         @bendConstrains.push([faceA, faceB, @particles[faceA.a], @particles[faceB.c], @particles[faceB.a], @particles[faceB.b]])
 
 
+onWindowResize = ->
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize( window.innerWidth, window.innerHeight )
 
-
+window.addEventListener('resize', onWindowResize, false)
 
 initStats = ->
   stats = new Stats()
@@ -381,7 +391,9 @@ initScene = ->
   camera.position.x = -300
   camera.position.y = 400
   camera.position.z = 300
-  camera.lookAt(scene.position)
+  camera.position.multiplyScalar(0.6)
+
+  camera.lookAt(new THREE.Vector3(50,0,50))
   renderer = new THREE.WebGLRenderer(antialias: on)
   renderer.setClearColor(0xEEEEEE)
   renderer.setSize(window.innerWidth, window.innerHeight)
@@ -418,6 +430,7 @@ cloth.setFaces(clothGeometry.faces)
 
 clothObj = THREE.SceneUtils.createMultiMaterialObject(clothGeometry,[clothMaterial,clothFrameMaterial])
 clothObj.position.set(0, 0, 0)
+clothObj.children[0].receiveShadow = on
 scene.add(clothObj)
 
 #arrows = []
@@ -435,44 +448,52 @@ applyBall2BallContacts = (b1, b2) ->
   b1.position.sub(correctHalf)
   b2.position.add(correctHalf)
 
-
-balls = []
 ballObjs = []
-ballRadius = 10
-ballMass = 15
-ballMaterial = new THREE.MeshLambertMaterial(color: 0x8B5A00)
-NUM = 5
-for u in [0..NUM-1]
-  initBallPos = new THREE.Vector3(-25+u*15,300,55+u*15)
-  balls.push( new Ball(initBallPos, ballRadius, ballMass) )
-  ballGeometry = new THREE.SphereGeometry(ballRadius,32,32)
-  ballObj = new THREE.Mesh(ballGeometry, ballMaterial)
-  ballObj.position.copy(initBallPos)
-  ballObj.castShadow = on
-  ballObj.receiveShadow = on
-  ballObjs.push(ballObj)
-  scene.add(ballObj)
+balls = []
+do global.tossBalls = ->
+  scene.remove(ballObjs...)
+  balls = []
+  ballObjs = []
+  ballRadius = 10
+  ballMass = 15
+  ballMaterial = new THREE.MeshLambertMaterial(color: 0x8B5A00)
+  NUM = 5
+  for u in [0..NUM-1]
+    initBallPos = new THREE.Vector3(-25+u*15,200,55+u*15)
+    balls.push( new Ball(initBallPos, ballRadius, ballMass) )
+    ballGeometry = new THREE.SphereGeometry(ballRadius,32,32)
+    ballObj = new THREE.Mesh(ballGeometry, ballMaterial)
+    ballObj.position.copy(initBallPos)
+    ballObj.castShadow = on
+    ballObj.receiveShadow = on
+    ballObjs.push(ballObj)
+
+  scene.add(ballObjs...)
+  cloth.collisionProxy = balls
 
 
-clothObj.children[0].receiveShadow = on
-cloth.collisionProxy = balls
 
 
 gui = new dat.GUI()
-gui.add(global, "wireframe").onChange()
+gui.add(global, "wireframe").onChange().listen()
 h = gui.addFolder( "Wind Force" )
 h.add(wind.windForce,"x",-10,20)
 h.add(wind.windForce,"y",-10,20)
 h.add(wind.windForce,"z",-10,20)
-
+h.open()
 h = gui.addFolder( "Cloth Coefficient" )
-h.add(global, "bendRest", 0, Math.PI)
-h.add(global, "bendStiff", 0, 1.5)
+h.add(global, "bendRest", 0, Math.PI * 0.1)
+h.add(global, "bendStiff", 0, 0.3)
+gui.add(global,"tossBalls")
 
 
 axes = new THREE.AxisHelper(20)
 scene.add(axes)
 
+switchWireframeOff = ->
+  global.wireframe = off
+
+setTimeout(switchWireframeOff, 4e3)
 
 render = ->
   cloth.simulate(TIMESTEP)

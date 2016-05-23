@@ -1,3 +1,10 @@
+#//              ______    _____            _________       _____   _____
+#//            /     /_  /    /            \___    /      /    /__/    /
+#//           /        \/    /    ___        /    /      /            /    ___
+#//          /     / \      /    /\__\      /    /___   /    ___     /    /   \
+#//        _/____ /   \___ /    _\___     _/_______ / _/___ / _/___ /    _\___/\_
+
+
 #initStats = ->
 #  stats = new Stats()
 #  stats.setMode(0)
@@ -5,6 +12,13 @@
 #  stats.domElement.style.left = '0px'
 #  stats.domElement.style.top = '0px'
 #  stats
+
+onWindowResize = ->
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize( window.innerWidth, window.innerHeight )
+
+window.addEventListener('resize', onWindowResize, false)
 
 initScene = ->
   scene = new THREE.Scene()

@@ -1,3 +1,9 @@
+#//              ______    _____            _________       _____   _____
+#//            /     /_  /    /            \___    /      /    /__/    /
+#//           /        \/    /    ___        /    /      /            /    ___
+#//          /     / \      /    /\__\      /    /___   /    ___     /    /   \
+#//        _/____ /   \___ /    _\___     _/_______ / _/___ / _/___ /    _\___/\_
+
 kmath =
   subVectors: (v1, v2) ->
     [v1[0]-v2[0], v1[1]-v2[1], v1[2]-v2[2]]
@@ -318,6 +324,12 @@ class PBDCloth
 
     @estimateNewVelocity(deltaTime)
 
+onWindowResize = ->
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize( window.innerWidth, window.innerHeight )
+
+window.addEventListener('resize', onWindowResize, false)
 
 orbitControls = undefined
 initStats = ->
