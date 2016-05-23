@@ -332,7 +332,7 @@ initScene = ->
   camera.position.y = 400
   camera.position.z = 300
   camera.lookAt(scene.position)
-  renderer = new THREE.WebGLRenderer()
+  renderer = new THREE.WebGLRenderer(antialias: on)
   renderer.setClearColor(0xEEEEEE)
   renderer.setSize(window.innerWidth, window.innerHeight)
   {scene, camera, renderer}

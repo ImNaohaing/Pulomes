@@ -437,7 +437,7 @@ initScene = ->
   camera.position.y = 40
   camera.position.z = 30
   camera.lookAt(scene.position)
-  renderer = new THREE.WebGLRenderer()
+  renderer = new THREE.WebGLRenderer(antialias: on)
   renderer.setClearColor(0xEEEEEE)
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.shadowMap.enabled = on
@@ -482,7 +482,7 @@ loadFunc = (bufferGeometry) ->
   geometry = global.generateGeometryFromBufferGeometry(bufferGeometry)
 
   mesh = new THREE.Mesh(geometry, stlMaterial)
-  mesh.position.set(0,0,0)
+  mesh.position.set(0,0,-10)
   mesh.rotation.set(0,0,0)
   mesh.scale.set(0.3,0.3,0.3)
 
@@ -492,7 +492,7 @@ loadFunc = (bufferGeometry) ->
 
   mesh.rotation.set(0,0,0)
   mesh.scale.set(1, 1, 1)
-  mesh.position.set(0,0,-10)
+  mesh.position.set(0,0,0)
 
   geometry.computeFaceNormals()
   geometry.computeVertexNormals()
@@ -551,13 +551,13 @@ appStart = () ->
   restVolume  = global.computeVolumeByWeighedNorms(wnv, geometry.vertices)
   console.log(restVolume)
 
-  planeGeo = new THREE.PlaneGeometry(50,50)
+  planeGeo = new THREE.SphereGeometry( 5, 32, 32, 0, 2 * Math.PI)
   planeMat = new THREE.MeshBasicMaterial(color: 0x22b5ff, side: THREE.DoubleSide)
   planeMat.transparent = on
   planeMat.opacity = 0.1
   planeObj = new THREE.Mesh(planeGeo, planeMat)
   planeObj.rotation.x = Math.PI / 2
-  planeObj.position.set(0,15,0)
+  planeObj.position.set(0,15,10)
 
   scene.add(planeObj)
 
@@ -573,9 +573,19 @@ appStart = () ->
   h.add(global, "shapeStretch").onChange()
 
   updatePlaneConstrains = () ->
+    tmpVec = new THREE.Vector3()
     for v in geometry.vertices
-      correctY = THREE.Math.clamp(v.y, -3, planeObj.position.y)
-      v.y = correctY
+#      correctY = THREE.Math.clamp(v.y, -3, planeObj.position.y)
+#      v.y = correctY
+      tmpVec.subVectors(planeObj.position, v)
+      l = tmpVec.lengthSq()
+      if l < 25
+        tmpVec.normalize().multiplyScalar(5)
+        v.subVectors(planeObj.position, tmpVec)
+
+
+      v.y = -3 if v.y < -3
+
 
   distanceConstrains = []
   tmpVec = new THREE.Vector3()

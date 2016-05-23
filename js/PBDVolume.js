@@ -10,7 +10,7 @@
     shapeStiff: 0.3,
     shapeStretch: false,
     generateGeometryFromBufferGeometry: function(bufferGeometry) {
-      var compareVertex, face, faces, float32Array, geometry, i, j, k, l, len1, ref, v, v1, v2, v3, vertices;
+      var compareVertex, face, faces, float32Array, geometry, i, j, k, len1, m, ref, v, v1, v2, v3, vertices;
       float32Array = bufferGeometry.attributes.position.array;
       geometry = new THREE.Geometry();
       vertices = geometry.vertices;
@@ -32,7 +32,7 @@
         v2 = new THREE.Vector3(float32Array[i + 3], float32Array[i + 4], float32Array[i + 5]);
         v3 = new THREE.Vector3(float32Array[i + 6], float32Array[i + 7], float32Array[i + 8]);
         face = {};
-        for (j = l = 0, len1 = vertices.length; l < len1; j = ++l) {
+        for (j = m = 0, len1 = vertices.length; m < len1; j = ++m) {
           v = vertices[j];
           if (compareVertex(v1, v) === true) {
             face.a = j;
@@ -106,9 +106,9 @@
       for (i = k = 0; k < 3; i = ++k) {
         v.set(a.elements[i], a.elements[i + 3], a.elements[i + 6]);
         results.push((function() {
-          var l, results1;
+          var m, results1;
           results1 = [];
-          for (j = l = 0; l < 9; j = l += 3) {
+          for (j = m = 0; m < 9; j = m += 3) {
             w.set(b.elements[j], b.elements[j + 1], b.elements[j + 2]);
             results1.push(mat.elements[i + j] = v.dot(w));
           }
@@ -118,7 +118,7 @@
       return results;
     },
     polarDecompositionStable: function(M, tolerance, R) {
-      var Eone, Et, M2, MadjTinf, MadjTone, MadjTt, Minf, Mone, Mt, det, g1, g2, gamma, i, index, j, k, l, len, m, tmpVec1, tmpVec2, tmpVec3;
+      var Eone, Et, M2, MadjTinf, MadjTone, MadjTt, Minf, Mone, Mt, det, g1, g2, gamma, i, index, j, k, len, m, n, tmpVec1, tmpVec2, tmpVec3;
       Mt = new THREE.Matrix3().copy(M).transpose();
       Mone = global.oneNorm(M);
       Minf = global.infNorm(M);
@@ -184,8 +184,8 @@
         gamma = Math.sqrt(Math.sqrt((MadjTone * MadjTinf) / (Mone * Minf)) / Math.abs(det));
         g1 = gamma * 0.5;
         g2 = 0.5 / (gamma * det);
-        for (i = l = 0; l <= 2; i = ++l) {
-          for (j = m = 0; m <= 2; j = ++m) {
+        for (i = m = 0; m <= 2; i = ++m) {
+          for (j = n = 0; n <= 2; j = ++n) {
             this.setE(Et, i, j, this.getE(Mt, i, j));
             this.setE(Mt, i, j, g1 * this.getE(Mt, i, j) + g2 * this.getE(MadjTt, i, j));
             this.setE(Et, i, j, this.getE(Et, i, j) - this.getE(Mt, i, j));
@@ -273,7 +273,7 @@
       return vertexTopo;
     },
     computeWeighedNorms: function(topology, vertices, faces) {
-      var face, fi, k, l, len1, len2, norm, normSum, p1, p2, p3, v21, v31, vtopo, wnvector;
+      var face, fi, k, len1, len2, m, norm, normSum, p1, p2, p3, v21, v31, vtopo, wnvector;
       v21 = new THREE.Vector3();
       v31 = new THREE.Vector3();
       norm = new THREE.Vector3();
@@ -281,8 +281,8 @@
       for (k = 0, len1 = topology.length; k < len1; k++) {
         vtopo = topology[k];
         normSum = new THREE.Vector3(0, 0, 0);
-        for (l = 0, len2 = vtopo.length; l < len2; l++) {
-          fi = vtopo[l];
+        for (m = 0, len2 = vtopo.length; m < len2; m++) {
+          fi = vtopo[m];
           face = faces[fi];
           p1 = vertices[face.a];
           p2 = vertices[face.b];
@@ -307,7 +307,7 @@
       return volume /= 9;
     },
     computeVolumeConstrain: function(restVolume, topology, vertices, faces, options) {
-      var coff, correct, corrects, curVolume, diff, k, l, len1, len2, localWeights, normSq, w, wNorms;
+      var coff, correct, corrects, curVolume, diff, k, len1, len2, localWeights, m, normSq, w, wNorms;
       localWeights = options != null ? options.localWeights.localWeights : void 0;
       wNorms = global.computeWeighedNorms(topology, vertices, faces);
       curVolume = global.computeVolumeByWeighedNorms(wNorms, vertices);
@@ -322,8 +322,8 @@
         console.warn("scope " + this + ": normSq appear 0, please check function \"computeVolumeConstrain\"");
       }
       corrects = [];
-      for (l = 0, len2 = wNorms.length; l < len2; l++) {
-        w = wNorms[l];
+      for (m = 0, len2 = wNorms.length; m < len2; m++) {
+        w = wNorms[m];
         correct = new THREE.Vector3().copy(w);
         correct.multiplyScalar(-coff);
         corrects.push(correct);
@@ -331,7 +331,7 @@
       return corrects;
     },
     initShapeMatching: function(x0, restCm, invRestMat) {
-      var A, det, k, l, len1, len2, qi, ret, v, x2, xy, xz, y2, yz, z2;
+      var A, det, k, len1, len2, m, qi, ret, v, x2, xy, xz, y2, yz, z2;
       restCm.set(0, 0, 0);
       A = new THREE.Matrix3();
       A.set.apply(A, [0, 0, 0, 0, 0, 0, 0, 0, 0]);
@@ -342,8 +342,8 @@
       }
       restCm.multiplyScalar(1 / x0.length);
       qi = new THREE.Vector3(0, 0, 0);
-      for (l = 0, len2 = x0.length; l < len2; l++) {
-        v = x0[l];
+      for (m = 0, len2 = x0.length; m < len2; m++) {
+        v = x0[m];
         qi.subVectors(v, restCm);
         x2 = qi.x * qi.x;
         y2 = qi.y * qi.y;
@@ -369,7 +369,7 @@
       return ret;
     },
     computeShapeMatching: function(x0, x, restCm, invRestMat, stiff, allowStrech) {
-      var corr, curCm, goal, i, k, l, len1, m, mat, p, q, ref, ref1, result, v;
+      var corr, curCm, goal, i, k, len1, m, mat, n, p, q, ref, ref1, result, v;
       curCm = new THREE.Vector3(0, 0, 0);
       for (k = 0, len1 = x.length; k < len1; k++) {
         v = x[k];
@@ -380,7 +380,7 @@
       mat.set.apply(mat, [0, 0, 0, 0, 0, 0, 0, 0, 0]);
       q = new THREE.Vector3(0, 0, 0);
       p = new THREE.Vector3(0, 0, 0);
-      for (i = l = 0, ref = x.length; 0 <= ref ? l < ref : l > ref; i = 0 <= ref ? ++l : --l) {
+      for (i = m = 0, ref = x.length; 0 <= ref ? m < ref : m > ref; i = 0 <= ref ? ++m : --m) {
         q.subVectors(x0[i], restCm);
         p.subVectors(x[i], curCm);
         mat.elements[0] += p.x * q.x;
@@ -400,7 +400,7 @@
         global.polarDecompositionStable(mat, global.eps, result);
       }
       corr = [];
-      for (i = m = 0, ref1 = x0.length; 0 <= ref1 ? m < ref1 : m > ref1; i = 0 <= ref1 ? ++m : --m) {
+      for (i = n = 0, ref1 = x0.length; 0 <= ref1 ? n < ref1 : n > ref1; i = 0 <= ref1 ? ++n : --n) {
         goal = new THREE.Vector3().subVectors(x0[i], restCm).applyMatrix3(result).add(curCm);
         goal.sub(x[i]).multiplyScalar(stiff);
         corr.push(goal);
@@ -494,7 +494,9 @@
     camera.position.y = 40;
     camera.position.z = 30;
     camera.lookAt(scene.position);
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({
+      antialias: true
+    });
     renderer.setClearColor(0xEEEEEE);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
@@ -560,7 +562,7 @@
     var geometry, k, len1, ref1, v;
     geometry = global.generateGeometryFromBufferGeometry(bufferGeometry);
     mesh = new THREE.Mesh(geometry, stlMaterial);
-    mesh.position.set(0, 0, 0);
+    mesh.position.set(0, 0, -10);
     mesh.rotation.set(0, 0, 0);
     mesh.scale.set(0.3, 0.3, 0.3);
     mesh.updateMatrixWorld();
@@ -571,7 +573,7 @@
     }
     mesh.rotation.set(0, 0, 0);
     mesh.scale.set(1, 1, 1);
-    mesh.position.set(0, 0, -10);
+    mesh.position.set(0, 0, 0);
     geometry.computeFaceNormals();
     geometry.computeVertexNormals();
     scene.add(mesh);
@@ -582,7 +584,7 @@
   loader.load("../models/马里奥.stl", loadFunc);
 
   appStart = function() {
-    var clock, distanceConstrains, f, fa, fb, fc, geometry, geometryTopo, gui, h, invRestMat, k, l, len1, len2, planeGeo, planeMat, planeObj, ref1, ref2, render, restCm, restVolume, tmpVec, trans, updateDistanceConstrains, updatePlaneConstrains, v, wnv, x0;
+    var clock, distanceConstrains, f, fa, fb, fc, geometry, geometryTopo, gui, h, invRestMat, k, len1, len2, m, planeGeo, planeMat, planeObj, ref1, ref2, render, restCm, restVolume, tmpVec, trans, updateDistanceConstrains, updatePlaneConstrains, v, wnv, x0;
     geometry = mesh.geometry;
     x0 = [];
     ref1 = geometry.vertices;
@@ -599,7 +601,7 @@
     wnv = global.computeWeighedNorms(geometryTopo, geometry.vertices, geometry.faces);
     restVolume = global.computeVolumeByWeighedNorms(wnv, geometry.vertices);
     console.log(restVolume);
-    planeGeo = new THREE.PlaneGeometry(50, 50);
+    planeGeo = new THREE.SphereGeometry(5, 32, 32, 0, 2 * Math.PI);
     planeMat = new THREE.MeshBasicMaterial({
       color: 0x22b5ff,
       side: THREE.DoubleSide
@@ -608,7 +610,7 @@
     planeMat.opacity = 0.1;
     planeObj = new THREE.Mesh(planeGeo, planeMat);
     planeObj.rotation.x = Math.PI / 2;
-    planeObj.position.set(0, 15, 0);
+    planeObj.position.set(0, 15, 10);
     scene.add(planeObj);
     trans = new THREE.Vector3(0, 0, 0);
     gui = new dat.GUI();
@@ -619,21 +621,31 @@
     h.add(global, "shapeStiff", 0, 1);
     h.add(global, "shapeStretch").onChange();
     updatePlaneConstrains = function() {
-      var correctY, l, len2, ref2, results;
+      var l, len2, m, ref2, results, tmpVec;
+      tmpVec = new THREE.Vector3();
       ref2 = geometry.vertices;
       results = [];
-      for (l = 0, len2 = ref2.length; l < len2; l++) {
-        v = ref2[l];
-        correctY = THREE.Math.clamp(v.y, -3, planeObj.position.y);
-        results.push(v.y = correctY);
+      for (m = 0, len2 = ref2.length; m < len2; m++) {
+        v = ref2[m];
+        tmpVec.subVectors(planeObj.position, v);
+        l = tmpVec.lengthSq();
+        if (l < 25) {
+          tmpVec.normalize().multiplyScalar(5);
+          v.subVectors(planeObj.position, tmpVec);
+        }
+        if (v.y < -3) {
+          results.push(v.y = -3);
+        } else {
+          results.push(void 0);
+        }
       }
       return results;
     };
     distanceConstrains = [];
     tmpVec = new THREE.Vector3();
     ref2 = geometry.faces;
-    for (l = 0, len2 = ref2.length; l < len2; l++) {
-      f = ref2[l];
+    for (m = 0, len2 = ref2.length; m < len2; m++) {
+      f = ref2[m];
       fa = geometry.vertices[f.a];
       fb = geometry.vertices[f.b];
       fc = geometry.vertices[f.c];
@@ -642,17 +654,17 @@
       distanceConstrains.push([fb, fc, tmpVec.subVectors(fb, fc).length()]);
     }
     updateDistanceConstrains = function() {
-      var dc, len3, m, results;
+      var dc, len3, n, results;
       results = [];
-      for (m = 0, len3 = distanceConstrains.length; m < len3; m++) {
-        dc = distanceConstrains[m];
+      for (n = 0, len3 = distanceConstrains.length; n < len3; n++) {
+        dc = distanceConstrains[n];
         results.push(global.applyConstrains(dc[1], dc[0], dc[2]));
       }
       return results;
     };
     clock = new THREE.Clock();
     render = function() {
-      var corrects, corrs, delta, i, len3, len4, m, n, o, ref3, ref4, volume;
+      var corrects, corrs, delta, i, len3, len4, n, o, ref3, ref4, s, volume;
       delta = clock.getDelta();
       orbitControls.update(delta);
       updatePlaneConstrains();
@@ -660,14 +672,14 @@
       volume = global.computeVolumeByWeighedNorms(wnv, geometry.vertices);
       corrects = global.computeVolumeConstrain(restVolume, geometryTopo, geometry.vertices, geometry.faces);
       ref3 = geometry.vertices;
-      for (i = m = 0, len3 = ref3.length; m < len3; i = ++m) {
+      for (i = n = 0, len3 = ref3.length; n < len3; i = ++n) {
         v = ref3[i];
         v.add(corrects[i]);
       }
-      for (i = n = 0; n < 2; i = ++n) {
+      for (i = o = 0; o < 2; i = ++o) {
         corrs = global.computeShapeMatching(x0, geometry.vertices, restCm, invRestMat, global.shapeStiff, global.shapeStretch);
         ref4 = geometry.vertices;
-        for (i = o = 0, len4 = ref4.length; o < len4; i = ++o) {
+        for (i = s = 0, len4 = ref4.length; s < len4; i = ++s) {
           v = ref4[i];
           v.add(corrs[i]);
         }

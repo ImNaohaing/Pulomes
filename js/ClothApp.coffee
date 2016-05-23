@@ -1,8 +1,10 @@
 gravity = new THREE.Vector3(0, -9.8, 0)
 TIMESTEP = 18 / 1000;
 TIMESTEP_SQ = TIMESTEP * TIMESTEP;
-pins = [0,110]
-wind = new THREE.Vector3(15,0,15)
+pins = [0,20]
+wind = new THREE.Vector3(0,5,15)
+global =
+  wireframe: on
 
 class Cloth
   damping:    0.03
@@ -114,25 +116,26 @@ class Cloth
       particle.addForce(gForce)
       particle.integrate(TIMESTEP_SQ, @drag)
 
-    constrains = @constrains
-    for i in [0..constrains.length-1]
-      constrain = constrains[i]
-      @satisfyConstrains(constrain[0], constrain[1], constrain[2])
+    for i in [0...1]
+      constrains = @constrains
+      for i in [0..constrains.length-1]
+        constrain = constrains[i]
+        @satisfyConstrains(constrain[0], constrain[1], constrain[2])
 
-    #Ball Constrains
+      #Ball Constrains
 
-    #Pin Constrains
-    for i in [0..pins.length-1]
-      xy = pins[i]
-      particle = particles[xy]
-      particle.position.copy(particle.original)
-      particle.previous.copy(particle.original)
+      #Pin Constrains
+      for i in [0..pins.length-1]
+        xy = pins[i]
+        particle = particles[xy]
+        particle.position.copy(particle.original)
+        particle.previous.copy(particle.original)
 
-    #Floor Constrains
-    for particle in particles
-      pos = particle.position
-      if pos.y < -4
-        pos.y = -4
+#    #Floor Constrains
+#    for particle in particles
+#      pos = particle.position
+#      if pos.y < -4
+#        pos.y = -4
 
 
 
@@ -204,11 +207,13 @@ initScene = ->
   renderer.shadowMap.enabled = off
   {scene, camera, renderer}
 
+
 gui = new dat.GUI()
-gui.add(gravity, 'y', -50, 50)
-gui.add(wind, 'x', -25, 25)
-gui.add(wind, 'y', -25, 25)
-gui.add(wind, 'z', -25, 25)
+gui.add(global,"wireframe").onChange()
+h = gui.addFolder( "Wind Force" )
+h.add(wind,"x",-10,20)
+h.add(wind,"y",-10,20)
+h.add(wind,"z",-10,20)
 
 
 stats = initStats()
@@ -231,7 +236,7 @@ light.shadow.mapSize.width = 1024
 light.shadow.mapSize.height = 1024
 scene.add(light)
 
-cloth = new Cloth(3,40,40)
+cloth = new Cloth(5,20,20)
 
 clothMaterial = new THREE.MeshLambertMaterial(color: 0x22b5ff, side: THREE.DoubleSide)
 clothFrameMaterial = new THREE.MeshBasicMaterial(color:0xff0000, wireframe: on)
@@ -251,13 +256,13 @@ scene.add(clothObj)
 #cubeObj.receiveShadow = on
 #scene.add(cubeObj)
 
-planeGeo = new THREE.PlaneGeometry(1000, 1000)
-planeMat = new THREE.MeshLambertMaterial(color: 0xeeeeee)
-planeObj = new THREE.Mesh(planeGeo, planeMat)
-planeObj.position.set(0, -5, 0)
-planeObj.rotation.x = -Math.PI/2
-planeObj.receiveShadow = on
-scene.add(planeObj)
+#planeGeo = new THREE.PlaneGeometry(1000, 1000)
+#planeMat = new THREE.MeshLambertMaterial(color: 0xeeeeee)
+#planeObj = new THREE.Mesh(planeGeo, planeMat)
+#planeObj.position.set(0, -5, 0)
+#planeObj.rotation.x = -Math.PI/2
+#planeObj.receiveShadow = on
+#scene.add(planeObj)
 
 
 
@@ -271,6 +276,7 @@ render = ->
   time = Date.now()
 #  if time < 100 then cubeObj.translateZ(0.1) else cubeObj.translateZ(-0.1)
   cloth.simulate(time, clothGeo.faces, wind)
+  clothFrameMaterial.wireframe = global.wireframe
 
   p = cloth.particles
   for i in [0..p.length-1]

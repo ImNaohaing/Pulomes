@@ -175,7 +175,7 @@ class PBDCloth
 
   simulate: (deltaTime) ->
 
-#AeroForces
+    #AeroForces
     tmpForce = new THREE.Vector3()
     if not @faces?
       console.warn("clothFaces not assigned!")
@@ -382,7 +382,7 @@ initScene = ->
   camera.position.y = 400
   camera.position.z = 300
   camera.lookAt(scene.position)
-  renderer = new THREE.WebGLRenderer()
+  renderer = new THREE.WebGLRenderer(antialias: on)
   renderer.setClearColor(0xEEEEEE)
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.shadowMap.enabled = on
