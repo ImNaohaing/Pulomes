@@ -453,6 +453,7 @@ initScene = ->
   camera.position.z = 30
   camera.lookAt(scene.position)
   renderer = new THREE.WebGLRenderer(antialias: on)
+  renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setClearColor(0xEEEEEE)
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.shadowMap.enabled = on
@@ -530,7 +531,6 @@ loader.load("../models/马里奥.stl", loadFunc)
 
 
 
-
 appStart = () ->
 
   #boxGeometry = new THREE.BoxGeometry(10, 10, 10, 10, 10, 10)
@@ -592,8 +592,9 @@ appStart = () ->
   trans = new THREE.Vector3(0,0,0)
   gui = new dat.GUI()
 
-  h = gui.addFolder( "Vertex Position" )
+  h = gui.addFolder( "Plane Y Postion" )
   h.add(planeObj.position,"y",0,13)
+  h.open()
   h = gui.addFolder( "Coeffience" )
   h.add(global,"stiffness",0,1)
   h.add(global,"shapeStiff",0,1)
@@ -642,7 +643,7 @@ appStart = () ->
     orbitControls.update(delta)
 
 
-    planeLeft.position.x = -Math.sin( clock.getElapsedTime())*10 - 10
+    planeLeft.position.x = -Math.sin( clock.getElapsedTime())*13 - 10
     #planeObj.position.y = -Math.sin( clock.getElapsedTime()*global.compressSpeed/50 ) * 8 + 5
     #tf(trans.x, trans.y, trans.z)
     updatePlaneConstrains()

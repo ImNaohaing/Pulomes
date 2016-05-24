@@ -395,6 +395,7 @@ initScene = ->
 
   camera.lookAt(new THREE.Vector3(50,0,50))
   renderer = new THREE.WebGLRenderer(antialias: on)
+  renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setClearColor(0xEEEEEE)
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.shadowMap.enabled = on

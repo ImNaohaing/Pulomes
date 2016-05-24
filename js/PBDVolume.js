@@ -505,6 +505,7 @@
     renderer = new THREE.WebGLRenderer({
       antialias: true
     });
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(0xEEEEEE);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
@@ -637,8 +638,9 @@
     scene.add(planeRight);
     trans = new THREE.Vector3(0, 0, 0);
     gui = new dat.GUI();
-    h = gui.addFolder("Vertex Position");
+    h = gui.addFolder("Plane Y Postion");
     h.add(planeObj.position, "y", 0, 13);
+    h.open();
     h = gui.addFolder("Coeffience");
     h.add(global, "stiffness", 0, 1);
     h.add(global, "shapeStiff", 0, 1);
@@ -688,7 +690,7 @@
       var corrects, corrs, delta, i, len3, len4, m, n, o, ref3, ref4, volume;
       delta = clock.getDelta();
       orbitControls.update(delta);
-      planeLeft.position.x = -Math.sin(clock.getElapsedTime()) * 10 - 10;
+      planeLeft.position.x = -Math.sin(clock.getElapsedTime()) * 13 - 10;
       updatePlaneConstrains();
       wnv = global.computeWeighedNorms(geometryTopo, geometry.vertices, geometry.faces);
       volume = global.computeVolumeByWeighedNorms(wnv, geometry.vertices);
