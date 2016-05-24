@@ -1,3 +1,9 @@
+#//              ______    _____            _________       _____   _____
+#//            /     /_  /    /            \___    /      /    /__/    /
+#//           /        \/    /    ___        /    /      /            /    ___
+#//          /     / \      /    /\__\      /    /___   /    ___     /    /   \
+#//        _/____ /   \___ /    _\___     _/_______ / _/___ / _/___ /    _\___/\_
+
 global = {
   lerp: (s, e, t) ->
     if 1 >= t >= 0 then return (e - s) * t + s
@@ -235,7 +241,12 @@ class Ball
     @addForce(gForce)
     @integrate(deltaTime)
 
+onWindowResize = ->
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize( window.innerWidth, window.innerHeight )
 
+window.addEventListener('resize', onWindowResize, false)
 
 initStats = ->
   stats = new Stats()
@@ -253,6 +264,7 @@ initScene = ->
   camera.position.z = 300
   camera.lookAt(scene.position)
   renderer = new THREE.WebGLRenderer(antialias: on)
+  renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setClearColor(0xEEEEEE)
   renderer.setSize(window.innerWidth, window.innerHeight)
   {scene, camera, renderer}

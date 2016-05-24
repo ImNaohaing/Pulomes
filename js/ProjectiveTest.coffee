@@ -1,3 +1,9 @@
+#//              ______    _____            _________       _____   _____
+#//            /     /_  /    /            \___    /      /    /__/    /
+#//           /        \/    /    ___        /    /      /            /    ___
+#//          /     / \      /    /\__\      /    /___   /    ___     /    /   \
+#//        _/____ /   \___ /    _\___     _/_______ / _/___ / _/___ /    _\___/\_
+
 kmath =
   subVectors: (v1, v2) ->
     [v1[0]-v2[0], v1[1]-v2[1], v1[2]-v2[2]]
@@ -97,14 +103,13 @@ class Solver
 
 
 
-
-
 class EdgeStrainConstrain
   constructor: (positions, pid1, pid2, weight, rangeMin=1, rangeMax=1) ->
     @pid1     = pid1
     @pid2     = pid2
     @rMin     = rangeMin
     @rMax     = rangeMax
+
 
 
     len = kmath.length( kmath.subVectors(positions[pid2],positions[pid1]) )

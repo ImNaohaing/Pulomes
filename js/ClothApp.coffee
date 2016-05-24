@@ -1,7 +1,14 @@
+#//              ______    _____            _________       _____   _____
+#//            /     /_  /    /            \___    /      /    /__/    /
+#//           /        \/    /    ___        /    /      /            /    ___
+#//          /     / \      /    /\__\      /    /___   /    ___     /    /   \
+#//        _/____ /   \___ /    _\___     _/_______ / _/___ / _/___ /    _\___/\_
+
+
 gravity = new THREE.Vector3(0, -9.8, 0)
 TIMESTEP = 18 / 1000;
 TIMESTEP_SQ = TIMESTEP * TIMESTEP;
-pins = [0,20]
+pins = [0,40]
 wind = new THREE.Vector3(0,5,15)
 global =
   wireframe: on
@@ -182,7 +189,12 @@ class ClothParticle
     @a.set(0, 0, 0)
 
 
+onWindowResize = ->
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize( window.innerWidth, window.innerHeight )
 
+window.addEventListener('resize', onWindowResize, false)
 
 
 initStats = ->
@@ -204,7 +216,7 @@ initScene = ->
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setClearColor(0xEEEEEE)
   renderer.setSize(window.innerWidth, window.innerHeight)
-  renderer.shadowMap.enabled = off
+  renderer.shadowMap.enabled = on
   {scene, camera, renderer}
 
 
@@ -236,7 +248,7 @@ light.shadow.mapSize.width = 1024
 light.shadow.mapSize.height = 1024
 scene.add(light)
 
-cloth = new Cloth(5,20,20)
+cloth = new Cloth(3,40,40)
 
 clothMaterial = new THREE.MeshLambertMaterial(color: 0x22b5ff, side: THREE.DoubleSide)
 clothFrameMaterial = new THREE.MeshBasicMaterial(color:0xff0000, wireframe: on)
@@ -256,13 +268,13 @@ scene.add(clothObj)
 #cubeObj.receiveShadow = on
 #scene.add(cubeObj)
 
-#planeGeo = new THREE.PlaneGeometry(1000, 1000)
-#planeMat = new THREE.MeshLambertMaterial(color: 0xeeeeee)
-#planeObj = new THREE.Mesh(planeGeo, planeMat)
-#planeObj.position.set(0, -5, 0)
-#planeObj.rotation.x = -Math.PI/2
-#planeObj.receiveShadow = on
-#scene.add(planeObj)
+planeGeo = new THREE.PlaneGeometry(1000, 1000)
+planeMat = new THREE.MeshLambertMaterial(color: 0xeeeeee)
+planeObj = new THREE.Mesh(planeGeo, planeMat)
+planeObj.position.set(0, -5, 0)
+planeObj.rotation.x = -Math.PI/2
+planeObj.receiveShadow = on
+scene.add(planeObj)
 
 
 
